@@ -1,191 +1,174 @@
-let gameState = "center";  // Tracks the current state of the game (center, left, or right)
-let message = "You are in a room with two paths. Go Left (L) or Right (R).";
-let gameEnded = false;     // Tracks if the game has ended (win or lose)
-
-let stars = [];  // Array to hold star positions
-let confetti = [];  // Array to hold confetti particles
-let mermaidBg;  // Variable to hold the mermaid background image
-let MermaidSound;  // Declare variable for the mermaid background sound
-let Castlestart;      // Variable to hold the castle starting page background image
+let coverImg; // Cover page background image
+let instructImg; // Instruction background image
+let dog;
+let dogImg, chickenImg, vegetableImg, candyImg, bgImg, winBgImg, loseBgImg;
+let items = [];
+let score = 0;
+let wrongCatch = 0;
+let gameState = 'cover'; // Start with the cover page
+let bgMusic; // Background music
+let musicStarted = false; // Track if music has started
 
 function preload() {
-  // Load the mermaid background image
-  mermaidBg = loadImage('ocean.jpg'); // ocean
-   // Load the path background image
-  pathBg = loadImage('path.jpg'); // path
-  MermaidSound = loadSound('song.mp3'); //mermaid singing
-  
+  coverImg = loadImage('FC.png');// Frpnt Cover
+  bgImg = loadImage('Kitchen.png');// Kitchen Background
+  dogImg = loadImage('Doggy.png');
+  chickenImg = loadImage('Chicken.png');// Good Item
+  vegetableImg = loadImage('Veg.png');// Bad Item
+  candyImg = loadImage('Choc.png');// Bad Item
+  winBgImg = loadImage('Winner.png');// Winning Page
+  loseBgImg = loadImage('Lost.png');// Losing Page
+  instructImg = loadImage('Instruct.png');// Instructions
+  bgMusic = loadSound('Music.mp3'); // Background music
 }
 
-function setup() { 
-  createCanvas(700, 700);  // Set up the canvas size
-  textSize(15);            // Set the text size to 15
-  textStyle(BOLD);         // Make the font bold
-  textAlign(CENTER, CENTER); // Center the text alignment
+function setup() {
+  createCanvas(700, 700);
+  dog = {
+    x: width / 2,
+    y: height - 150,
+    width: 150,
+    height: 150
+  };
+  
+  spawnItem(); // Initialize the first item
+}
 
-  // Initialize stars
-  for (let i = 0; i < 100; i++) {  // Adjust the number of stars as needed
-    stars.push({ x: random(width), y: random(height) });
-  }
-
-  // Initialize confetti
-  for (let i = 0; i < 100; i++) { // Adjust the number of confetti particles as needed
-    confetti.push(createConfetti());
+// Start playing background music after user interaction
+function mousePressed() {
+  if (!musicStarted) {
+    bgMusic.loop();
+    musicStarted = true; // Set flag to true so it doesn’t restart
   }
 }
 
 function draw() {
-    if (gameState === "start") {
-    background(100, 150, 200);  // Choose a background color for the start page
-    fill(255);  // Set text color to white
-    textSize(30);  // Larger text for the title
-    text("Welcome to the Adventure!", width / 2, height / 2 - 50);
-    textSize(20);  // Smaller text for the instructions
-    text("Press ENTER to begin", width / 2, height / 2);
+  if (gameState === 'cover') {
+    displayCover();
+  } else if (gameState === 'instructions') {
+    displayInstructions();
+  } else if (gameState === 'playing') {
+    background(bgImg);
+    displayDog();
+    displayItems();
+    moveItems();
+    checkCatch();
+    displayScore();
+
+    if (score >= 3) {
+      gameState = 'win';
+    } else if (wrongCatch >= 3) {
+      gameState = 'lose';
     }
-  if (gameState === "center") {
-    background(230, 190, 255);  // Light purple background for the center room
-  } else if (gameState === "party") {
-    background(0);  // Black background for the party
-    drawStars();    // Draw stars on the party page
-    drawMoon();     // Draw the moon on the party page
-    drawConfetti();  // Draw confetti particles
-  } else if (gameState === "mermaid") {
-    // Display the mermaid background image
-    image(mermaidBg, 0, 0, width, height); // Draw the background image for the mermaid page
-     // Play the mermaid sound when on the mermaid page
-    if (!MermaidSound.isPlaying()) {
-      MermaidSound.play();
-    }
-  } else {
-    background(173, 216, 230);  // Light blue background for other rooms
-    // Display the message to the player
-  if (gameState !== "start") {
-    fill(255);  // Set text color to white
-    text(message, width / 2, height / 2);
-    updateMessage()}
-  }
-
-  // Display the message to the player
-  fill(255);  // Set text color to white
-  text(message, width / 2, height / 2);
-
-  // Update message based on gameState
-  updateMessage();
-}
-
-function drawStars() {
-  noStroke();
-  fill(255); // White color for stars
-  for (let star of stars) {
-    ellipse(star.x, star.y, 2, 2);  // Draw stars at stored positions
+  } else if (gameState === 'win') {
+    displayWin();
+  } else if (gameState === 'lose') {
+    displayLose();
   }
 }
 
-function drawMoon() {
-  noStroke();
-  fill(240, 240, 255);  // Light color for the moon
-  let moonSize = 80;    // Size of the moon
-  let x = width - moonSize / 2 - 20; // Position the moon in the far right corner
-  let y = 100;         // Y position of the moon
+// Additional functions remain the same
 
-  ellipse(x, y, moonSize, moonSize); // Main moon circle
-
-  // Craters
-  fill(220, 220, 245);
-  ellipse(x + 20, y - 10, 20, 20);
-  ellipse(x - 30, y + 10, 15, 15);
-  ellipse(x - 10, y + 20, 10, 10);
+function displayCover() {
+  background(coverImg); // Front Cover Page
 }
 
-// Create a new confetti particle with random position, velocity, and color
-function createConfetti() {
-  return {
-    x: random(width),
-    y: random(height),
-    vx: random(-2, 2), // Horizontal velocity
-    vy: random(2, 5), // Vertical velocity
-    color: color(random(255), random(255), random(255)) // Random color
-  };
+function displayInstructions() {
+  background(instructImg); // Instruction Page
 }
 
-// Draw and update confetti particles
-function drawConfetti() {
-  for (let particle of confetti) {
-    noStroke();
-    fill(particle.color); // Set color for the particle
-    ellipse(particle.x, particle.y, 5, 5); // Draw confetti particle
-
-    // Update particle position
-    particle.x += particle.vx;
-    particle.y += particle.vy;
-
-    // Reset the particle when it goes off-screen
-    if (particle.x < 0 || particle.x > width || particle.y > height) {
-      Object.assign(particle, createConfetti());  // Reset particle with new values
-    }
-  }
-}
- 
-function updateMessage() {
-  if (gameState === "mermaid") {
-    message = "You chose the left path. You find a mermaid! 🧜\nSinging you a song🎵\nPress Space to return to the center.";
-  } else if (gameState === "dragon") {
-    message = "You chose the right path. You encounter a dragon 🐲!\nThey invite you to a castle off in the distance.\nDo you want to go to the castle🏰? \nPress (L) to accept or (R) to return.";
-  } else if (gameState === "center") {
-    message = "You find yourself in a magical world filled with mermaids and dragons.\nWhich one would you like to visit?: \nMermaid (L) or Dragon (R)?";
-  } else if (gameState === "castle") {
-    message = "You are at the castle.\n🐲: Would you like to come inside?\nYes, please (L). \nNo, thank you. I have to go home (R) Return to the center.";
-  } else if (gameState === "party") {
-    message = "🎉 You enter the castle and are welcomed to a grand party! 🥳\nThe dragon and other magical creatures celebrate your arrival.\nPress Space to return to the center.";
-  }
+function displayDog() {
+  push();
+  translate(dog.x + dog.width / 2, dog.y + dog.height / 2);
+  image(dogImg, -dog.width / 2, -dog.height / 2, dog.width, dog.height);
+  pop();
 }
 
-// Detect key presses for L, R, Space, and other keys
 function keyPressed() {
-  if (gameState === "start" && keyCode === ENTER) {
-    gameState = "center";  // Start the game when ENTER is pressed
+  if (gameState === 'cover' && keyCode === ENTER) {
+    gameState = 'instructions'; // Move to instructions page
+  } else if (gameState === 'instructions' && keyCode === ENTER) {
+    gameState = 'playing'; // Move to the main game
+  } else if (gameState === 'playing') {
+    if (keyCode === LEFT_ARROW) {
+      dog.x -= 20;
+    } else if (keyCode === RIGHT_ARROW) {
+      dog.x += 20;
+    }
+    dog.x = constrain(dog.x, 0, width - dog.width);
+  } else if ((gameState === 'win' || gameState === 'lose') && keyCode === ENTER) {
+    // Reload the page to restart the game
+    window.location.reload();
   }
-  if (gameEnded && key === ' ') {
-    restartGame();  // Restart the game if it's over and the player presses Space
-  } else if (!gameEnded) {
-    // Move between rooms based on the current gameState
-    if (gameState === "center") {
-      if (key === 'L' || key === 'l') {
-        gameState = "mermaid";   // Go left to meet the mermaid
-      } else if (key === 'R' || key === 'r') {
-        gameState = "dragon";    // Go right to meet the dragon
+}
+
+function spawnItem() {
+  let itemType = random(['chicken', 'vegetable', 'candy']);
+  let img = itemType === 'chicken' ? chickenImg : itemType === 'vegetable' ? vegetableImg : candyImg;
+  items.push({
+    x: random(width),
+    y: -50,
+    img: img,
+    type: itemType,
+    size: 100,
+    speed: random(3, 5)
+  });
+}
+
+function moveItems() {
+  for (let i = items.length - 1; i >= 0; i--) {
+    let item = items[i];
+    item.y += item.speed; // Move item down by its speed
+
+    // Remove item if it goes off the screen bottom
+    if (item.y > height + item.size) {
+      items.splice(i, 1); // Remove item directly from array
+    }
+  }
+
+  // Spawn a new item every 60 frames
+  if (frameCount % 60 === 0) {
+    spawnItem();
+  }
+}
+
+function displayItems() {
+  for (let item of items) {
+    image(item.img, item.x, item.y, item.size, item.size);
+  }
+}
+
+function checkCatch() {
+  for (let i = items.length - 1; i >= 0; i--) {
+    let item = items[i];
+    let isTouchingDog =
+      item.y + item.size >= dog.y && 
+      item.y <= dog.y + dog.height && 
+      item.x + item.size > dog.x && 
+      item.x < dog.x + dog.width;
+
+    if (isTouchingDog) {
+      if (item.type === 'chicken') {
+        score++;
+      } else {
+        wrongCatch++;
       }
-    } else if (gameState === "mermaid" && key === ' ') {
-      MermaidSound.stop();       // Stop the mermaid sound when returning to the center
-      gameState = "center";      // Press Space to return to the center from the mermaid
-    } else if (gameState === "dragon") {
-      if (key === 'R' || key === 'r') {
-        gameState = "center";    // Press R to return to the center from the dragon
-      } else if (key === 'L' || key === 'l') {
-        gameState = "castle";    // Press L to go to the castle with the dragon
-      }
-    } else if (gameState === "castle") {
-      if (key === 'R' || key === 'r') {
-        gameState = "center";    // Press R to return to the center from the castle
-      } else if (key === 'L' || key === 'l') {
-        gameState = "party";     // Press L to enter the party at the castle
-      }
-    } else if (gameState === "party" && key === ' ') {
-      gameState = "center";      // Press Space to return to the center after the party
+      items.splice(i, 1); // Remove item after it touches the dog
     }
   }
 }
 
-// Restart the game
-function restartGame() {
-  gameState = "center";   // Reset to the center room
-  message = "You are in a room with two paths. Go Left (L) or Right (R).";
-  gameEnded = false;      // Reset the game ended status
+function displayScore() {
+  textSize(17);
+  fill(0);
+  text(`Chicken Score: ${score}`, 60, 30);
+  text(`Veggies \nand Chocolate Bars: ${wrongCatch}`, 505, 30);
+}
 
-  // Reset confetti for a new game
-  confetti = [];
-  for (let i = 0; i < 100; i++) { // Adjust the number of confetti particles as needed
-    confetti.push(createConfetti());
-  }
+function displayWin() {
+  background(winBgImg); // Display win background image
+}
+
+function displayLose() {
+  background(loseBgImg); // Display losing background image
 }
